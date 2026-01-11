@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi SNBT Mirip Asli + Audio Fix</title>
+    <style>
+        :root {
+            /* Palette Warna Mirip Asli */
+            --header-blue: #00437a; /* Biru tua untuk header atas */
+            --bg-blue: #8da9b9;     /* Biru muda latar belakang utama */
+            --text-blue: #0056b3;   /* Biru untuk teks 'Selamat' */
+            --snpmb-green: #28a745; /* Hijau footer */
+            --fail-red: #8b0000;    /* Merah marun untuk gagal */
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* ================= QUIZ STYLES ================= */
+        #quiz-container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: block; /* Default visible */
+        }
+
+        .quiz-header { background: var(--header-blue); color: white; padding: 25px; text-align: center; }
+        .quiz-body { padding: 40px; }
+        .subtest-label { color: var(--header-blue); font-weight: bold; letter-spacing: 1px; margin-bottom: 15px; display: block; }
+        
+        .option-btn {
+            display: block; width: 100%; padding: 18px; margin: 12px 0;
+            border: 2px solid #e0e0e0; border-radius: 10px; background: #fff;
+            text-align: left; cursor: pointer; font-size: 16px; transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .option-btn:hover { background: #f0f8ff; border-color: var(--text-blue); transform: translateY(-2px); }
+
+        #start-screen { text-align: center; padding: 60px 20px; }
+        .start-btn { background: var(--header-blue); color: white; border: none; padding: 15px 40px; font-size: 18px; border-radius: 30px; cursor: pointer; margin-top: 20px; }
+
+
+        /* ================= RESULT LAYOUT (MIRIP ASLI) ================= */
+        #result-screen {
+            display: none; /* Hidden by default */
+            min-height: 100vh;
+            background-color: var(--bg-blue); /* Latar belakang biru muda */
+            flex-direction: column;
+        }
+
+        /* Header Bar Biru Tua */
+        .snpmb-top-bar {
+            background-color: var(--header-blue);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+        }
+        /* Placeholder Logo Tut Wuri (Ganti dengan img tag jika punya logonya) */
+        .logo-placeholder {
+            width: 50px; height: 50px; background: white; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            color: var(--header-blue); font-weight: bold; margin-right: 15px;
+        }
+        .header-titles h2 { margin: 0; font-size: 24px; letter-spacing: 1px; }
+        .header-titles p { margin: 5px 0 0 0; font-size: 12px; opacity: 0.9; }
+
+        /* Wrapper Utama */
+        .result-body-wrapper {
+            flex: 1;
+            padding: 30px 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .announcement-title {
+            text-align: center; color: white; font-weight: bold;
+            font-size: 22px; margin-bottom: 30px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        /* KARTU PUTIH UTAMA (Kunci Kemiripan) */
+        .white-card {
+            background: white;
+            border-radius: 15px;
+            padding: 35px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+        }
+
+        .photo-slot {
+            flex: 0 0 200px;
+            height: 266px; /* Rasio 3:4 */
+            background: #f0f0f0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 3px solid #fff;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        .photo-slot img { width: 100%; height: 100%; object-fit: cover; }
+
+        .details-area { flex: 1; }
+
+        .details-table { width: 100%; margin-bottom: 25px; }
+        .details-table td { padding: 6px 0; font-size: 15px; color: #333; vertical-align: top; }
+        .col-label { width: 150px; color: #666; font-weight: 500; }
+
+        /* Pesan Selamat */
+        .congrats-message {
+            color: var(--text-blue);
+            font-size: 20px;
+            margin: 30px 0 20px 0;
+            line-height: 1.4;
+        }
+        .congrats-message strong { font-weight: 800; font-size: 22px; }
+
+        .ptn-table td { padding: 5px 0; font-size: 16px; color: #333; }
+        .ptn-name { font-weight: bold; color: #000; font-size: 17px; }
+
+        .info-links { font-size: 13px; color: #666; margin: 30px 0; line-height: 1.6; }
+        .info-links a { color: var(--text-blue); text-decoration: none; border-bottom: 1px dotted; }
+
+        .btn-unduh {
+            display: block; width: 100%; padding: 15px;
+            background: var(--text-blue); color: white;
+            border: none; border-radius: 8px; font-size: 16px;
+            font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .btn-unduh:hover { background: #004494; }
+
+        /* Footer Hijau */
+        .footer-green {
+            background: var(--snpmb-green);
+            color: white; text-align: center;
+            padding: 18px; font-weight: bold;
+            cursor: pointer; font-size: 16px;
+        }
+        .footer-green:hover { background: #218838; }
+
+        /* Responsif untuk HP */
+        @media (max-width: 768px) {
+            .white-card { flex-direction: column; padding: 25px; gap: 25px; }
+            .photo-slot { width: 160px; height: 213px; margin: 0 auto; }
+            .details-table td, .ptn-table td { font-size: 14px; }
+            .congrats-message { font-size: 18px; text-align: center; }
+            .col-label { width: 120px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="quiz-container">
+    <div id="start-screen">
+        <h1 style="color: var(--header-blue);">SIMULASI UTBK-SNBT 2026</h1>
+        <p style="color: #666; margin-bottom: 30px;">Kerjakan 7 soal subtes. Minimal 4 benar untuk lolos.</p>
+        <button class="start-btn" onclick="startGame()">MULAI UJIAN</button>
+    </div>
+
+    <div id="quiz-section" style="display:none;">
+        <div class="quiz-header">
+            <h2 id="q-number" style="margin:0;">Soal No. 1</h2>
+        </div>
+        <div class="quiz-body">
+            <span id="subtest-name" class="subtest-label">SUBTES</span>
+            <p id="question-text" style="font-size: 20px; line-height: 1.5; color: #333;"></p>
+            <div id="options-container"></div>
+        </div>
+    </div>
+</div>
+
+
+<div id="result-screen">
+    <div class="snpmb-top-bar">
+        <div class="logo-placeholder">TW</div>
+        <div class="header-titles">
+            <h2>SNPMB</h2>
+            <p>Seleksi Nasional Penerimaan Mahasiswa Baru</p>
+        </div>
+    </div>
+
+    <div class="result-body-wrapper">
+        <h3 class="announcement-title">PENGUMUMAN HASIL SELEKSI SNBT SNPMB 2026</h3>
+        
+        <div class="white-card">
+            <div class="photo-slot">
+                <img src="foto.jpg" alt="Foto Peserta" onerror="this.src='https://via.placeholder.com/300x400?text=FOTO'">
+            </div>
+            
+            <div class="details-area">
+                <table class="details-table">
+                    <tr><td class="col-label">Nomor Peserta</td><td>: 1lov3n4d1n3</td></tr>
+                    <tr><td class="col-label">Nama</td><td>: Nadine Syakira Putri</td></tr>
+                    <tr><td class="col-label">Tanggal Lahir</td><td>: 29 April 2008</td></tr>
+                </table>
+
+                <div id="message-box" class="congrats-message">
+                    <strong>Selamat!</strong> Anda dinyatakan lulus seleksi SNBT SNPMB 2026 di
+                </div>
+
+                <table id="ptn-box" class="details-table ptn-table">
+                    <tr><td class="col-label">PTN</td><td class="ptn-name">: 199 - UNIVERSITAS DIPONEGORO</td></tr>
+                    <tr><td class="col-label">Program Studi</td><td class="ptn-name">: 19912 - ILMU KOMUNIKASI (S1)</td></tr>
+                </table>
+
+                <div class="info-links">
+                    Persyaratan pendaftaran ulang calon mahasiswa baru dapat dilihat di <a href="#">sini</a>.<br>
+                    Anda dapat mencetak kembali Kartu Tanda Peserta di <a href="#">sini</a>.
+                </div>
+
+                <button id="btn-unduh-box" class="btn-unduh">UNDUH PENGUMUMAN (PDF)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-green" onclick="location.reload()">
+        Kembali ke pencarian
+    </div>
+</div>
+
+<script>
+    // --- SETUP AUDIO (Backsound & SFX) ---
+    // Menggunakan link eksternal yang stabil
+    const bgm = new Audio('https://files.catbox.moe/vrsucb.mp3');
+    bgm.loop = true; 
+    bgm.volume = 0.08; // Volume agak dikecilkan biar tidak ganggu
+
+    const sfxClick = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
+    const sfxWin = new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'); // Suara menang
+    const sfxFail = new Audio('https://assets.mixkit.co/active_storage/sfx/251/251-preview.mp3'); // Suara gagal
+
+    // --- DATA SOAL ---
+    const questions = [
+        { sub: "Penalaran Umum", q: "Jika semua A adalah B, dan sebagian B adalah C. Simpulan yang tepat adalah...", options: ["Sebagian A adalah C", "Semua A adalah C", "Sebagian C adalah B", "Tidak ada simpulan"], ans: 2 },
+        { sub: "PPU", q: "Kata 'Nisbi' bersinonim dengan...", options: ["Mutlak", "Relatif", "Pasti", "Jelas"], ans: 1 },
+        { sub: "PBM", q: "Manakah kalimat efektif?", options: ["Bagi para siswa diharapkan hadir.", "Para siswa diharapkan hadir.", "Waktu dan tempat kami persilakan.", "Ia masuk ke dalam ruangan."], ans: 1 },
+        { sub: "Kuantitatif", q: "Jika x = 1/2 y dan y = 4, maka x + y = ...", options: ["4", "5", "6", "8"], ans: 2 },
+        { sub: "Lit. Indonesia", q: "Tujuan utama teks persuasi adalah...", options: ["Menghibur", "Menjelaskan", "Mempengaruhi", "Menceritakan"], ans: 2 },
+        { sub: "Lit. Inggris", q: "What is the main idea of the passage?", options: ["Usually in first sentence", "Usually in last sentence", "Read whole paragraph", "Just guess it"], ans: 2 }, // Contoh simple
+        { sub: "Pen. Matematika", q: "Peluang muncul angka genap pada dadu adalah...", options: ["1/2", "1/3", "1/4", "1/6"], ans: 0 }
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+
+    // Fungsi dipanggil saat tombol MULAI diklik
+    function startGame() {
+        // FIX AUDIO: Play di sini karena dipicu interaksi user
+        bgm.play().catch(e => console.log("Gagal memutar audio otomatis:", e));
+        
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('quiz-section').style.display = 'block';
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const qData = questions[currentIdx];
+        document.getElementById('q-number').innerText = `Soal No. ${currentIdx + 1} / 7`;
+        document.getElementById('subtest-name').innerText = qData.sub;
+        document.getElementById('question-text').innerText = qData.q;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        qData.options.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => {
+                sfxClick.currentTime = 0; sfxClick.play(); // SFX Klik
+                checkAnswer(i);
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selectedIdx) {
+        if(selectedIdx === questions[currentIdx].ans) score++;
+        currentIdx++;
+        if(currentIdx < questions.length) showQuestion();
+        else showResult();
+    }
+
+    function showResult() {
+        bgm.pause(); // Stop musik latar
+        document.getElementById('quiz-container').style.display = 'none';
+        
+        const resultScreen = document.getElementById('result-screen');
+        resultScreen.style.display = 'flex'; // Tampilkan layar hasil
+
+        const messageBox = document.getElementById('message-box');
+        const ptnBox = document.getElementById('ptn-box');
+        const btnUnduh = document.getElementById('btn-unduh-box');
+
+        // Logika Lolos (Minimal benar 4)
+        if(score >= 4) {
+            sfxWin.play(); // Audio Menang
+            // Tampilan standar (Biru/Putih) sudah diset di CSS awal
+        } else {
+            // Logika Gagal
+            sfxFail.play(); // Audio Gagal
+            // Ubah tema jadi merah
+            resultScreen.style.backgroundColor = "var(--fail-red)";
+            document.querySelector('.snpmb-top-bar').style.backgroundColor = "#5a0000"; // Header lebih gelap
+            
+            // Ubah Pesan
+            messageBox.innerHTML = "<strong style='color:var(--fail-red)'>MOHON MAAF</strong><br>Anda dinyatakan TIDAK LULUS seleksi SNBT SNPMB 2026.";
+            messageBox.style.color = "#333"; // Warna teks biasa jadi hitam
+
+            // Sembunyikan Info PTN dan Tombol Unduh
+            ptnBox.style.display = 'none';
+            btnUnduh.style.display = 'none';
+            document.querySelector('.info-links').innerHTML = "Tetap semangat! Jangan putus asa dan coba lagi di kesempatan lain.";
+        }
+    }
+</script>
+
+</body>
+</html>
